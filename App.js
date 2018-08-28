@@ -1,13 +1,24 @@
 import React from 'react';
-import {StyleSheet, Text, View, StatusBar ,TextInput , Dimensions ,Platform,ScrollView} from 'react-native';
+import {StyleSheet, Text, View, StatusBar, TextInput, Dimensions, Platform, ScrollView} from 'react-native';
+import {AppLoading} from "expo";
 import ToDo from "./ToDo";
-const{height, width} = Dimensions.get("window");
+import uudiv1 from "uuid/v1";
+
+const {height, width} = Dimensions.get("window");
 export default class App extends React.Component {
-    state={
-        newToDo:""
+    state = {
+        newToDo: "",
+        loadedToDos: false
     };
+    componentDidMount = () => {
+        this._loadToDos();
+    };
+
     render() {
-        const {newToDo} =this.state;
+        const {newToDo, loadedToDos} = this.state;
+        if (!loadedToDos) {
+            return <AppLoading/>;
+        }
         return (
             <View style={styles.container}>
                 <StatusBar barStyle="light-content"/>
@@ -16,23 +27,58 @@ export default class App extends React.Component {
                     <TextInput
                         style={styles.input}
                         placeholder={"New To Do"}
-                        value ={newToDo}
+                        value={newToDo}
                         onChangeText={this._controllNewToDo}
                         placeholderTextColor={"#999"}
                         returnKeyType={"done"}
                         autoCorrect={false}
+                        onSubmitEditing={this._addToDo}
                     />
                     <ScrollView contentContainerStyle={styles.toDos}>
-                        <ToDo/>
+                        <ToDo text={"Hello I'm a ToDo"}/>
                     </ScrollView>
                 </View>
             </View>
         );
     }
+
     _controllNewToDo = text => {
         this.setState({
-            newToDo:text
+            newToDo: text
         })
+    }
+    _loadToDos = () => {
+        this.setState({
+            loadedToDos: true
+        })
+    }
+    _addToDo = () => {
+        const {newToDo} = this.state;
+        if (newToDo !== "") {
+            this.setState({
+                newToDo: ""
+            });
+            this.setState(prevState => {
+                const ID = uudiv1();
+                const newToDoObject = {
+                    [ID]: {
+                        id: ID,
+                        isCompleted: false,
+                        text: newToDo,
+                        createdAt: Date.now()
+
+                    }
+                };
+                const newState ={
+                    ...prevState,
+                    toDos:{
+                        ...prevState.toDos,
+                        ...newToDoObject
+                    }
+                }
+                return{...newState};
+            });
+        }
     }
 }
 
@@ -41,12 +87,12 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F23657',
         alignItems: 'center',
-
     },
     title: {
         color: "white",
         fontSize: 30,
         marginTop: 50,
+        marginBottom: 50,
         fontWeight: "200"
     },
     card: {
@@ -56,27 +102,27 @@ const styles = StyleSheet.create({
         borderTopLeftRadius: 10,
         borderTopRightRadius: 10,
         ...Platform.select({
-            ios:{
-                shadowColor:"rgb(50,50,50)",
+            ios: {
+                shadowColor: "rgb(50,50,50)",
                 shadowOpacity: 0.5,
-                shadowRadius:5,
-                shadowOffset:{
-                    height:-1,
+                shadowRadius: 5,
+                shadowOffset: {
+                    height: -1,
                     width: 0
                 }
             },
-            android:{
-                elevation:3,
+            android: {
+                elevation: 3,
             }
         })
     },
-    input:{
-        padding:20,
-        borderBottomColor:"#bbb",
-        borderBottomWidth:1,
-        fontSize:25,
+    input: {
+        padding: 20,
+        borderBottomColor: "#bbb",
+        borderBottomWidth: 1,
+        fontSize: 25,
     },
-    toDos:{
+    toDos: {
         alignItems: "center"
     }
 });
